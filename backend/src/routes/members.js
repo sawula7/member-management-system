@@ -1,30 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
+const authorize = require('../middleware/authorize');
+const memberController = require('../controllers/memberController');
 
-// Mock members data
-const members = [
-  { id: 1, name: 'John Doe', email: 'john@slstl.lk', role: 'Admin', status: 'Active', joinedDate: '2024-01-15' },
-  { id: 2, name: 'Jane Smith', email: 'jane@slstl.lk', role: 'Member', status: 'Active', joinedDate: '2024-02-20' },
-  { id: 3, name: 'Bob Johnson', email: 'bob@slstl.lk', role: 'Member', status: 'Active', joinedDate: '2024-03-10' },
-  { id: 4, name: 'Alice Williams', email: 'alice@slstl.lk', role: 'Moderator', status: 'Active', joinedDate: '2024-01-25' },
-  { id: 5, name: 'Charlie Brown', email: 'charlie@slstl.lk', role: 'Member', status: 'Inactive', joinedDate: '2024-04-05' }
-];
+// Get all members (all authenticated users can view)
+router.get('/', authMiddleware, memberController.getAllMembers);
 
-// Get all members (protected route)
-router.get('/', authMiddleware, (req, res) => {
-  res.json(members);
-});
+// Get member by ID (all authenticated users can view)
+router.get('/:id', authMiddleware, memberController.getMemberById);
 
-// Get member by ID (protected route)
-router.get('/:id', authMiddleware, (req, res) => {
-  const member = members.find(m => m.id === parseInt(req.params.id));
+// Create new member (admin and manager only)
+router.post('/', authMiddleware, authorize('admin', 'manager'), memberController.createMember);
 
-  if (!member) {
-    return res.status(404).json({ message: 'Member not found' });
-  }
+// Update member (admin and manager only)
+router.put('/:id', authMiddleware, authorize('admin', 'manager'), memberController.updateMember);
 
-  res.json(member);
-});
+// Delete member (admin only)
+router.delete('/:id', authMiddleware, authorize('admin'), memberController.deleteMember);
 
 module.exports = router;
