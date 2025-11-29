@@ -9,7 +9,9 @@ A full-stack member management system built with Vite.js (React) frontend and Ex
 - **Member Management**: View and manage forum members
 - **Modern UI**: Clean, responsive design with professional color palette
 - **Real-time Stats**: Dashboard displaying member statistics
-- **Role-based System**: Support for Admin, Moderator, and Member roles
+- **Role-based System**: Three user roles with different permissions (admin, manager, user)
+- **MongoDB Integration**: Persistent data storage with MongoDB
+- **Database Seeding**: Quick setup with sample data
 
 ## 🛠️ Tech Stack
 
@@ -22,6 +24,8 @@ A full-stack member management system built with Vite.js (React) frontend and Ex
 
 ### Backend
 - **Express.js** - Web framework
+- **MongoDB** - NoSQL database
+- **Mongoose** - MongoDB ODM
 - **JWT** - Authentication tokens
 - **bcryptjs** - Password hashing
 - **CORS** - Cross-origin resource sharing
@@ -31,6 +35,7 @@ A full-stack member management system built with Vite.js (React) frontend and Ex
 
 - Node.js (v16 or higher)
 - npm or yarn
+- MongoDB (v4.4 or higher)
 
 ## 🔧 Installation
 
@@ -57,19 +62,49 @@ npm install
 
 ## ⚙️ Configuration
 
-The backend uses environment variables. A default `.env` file is included in the `backend` directory:
+### Backend Environment Variables
+
+The backend uses environment variables. Create a `.env` file in the `backend` directory (or use the provided one):
 
 ```env
 PORT=5000
-JWT_SECRET=your_jwt_secret_key_change_this_in_production
-NODE_ENV=development
+JWT_SECRET=your-secret-key-here-change-in-production
+MONGODB_URI=mongodb://localhost:27017/member-management
 ```
 
-**Important**: Change the `JWT_SECRET` in production!
+**Important**:
+- Change the `JWT_SECRET` in production!
+- Update `MONGODB_URI` to match your MongoDB connection string
+- For cloud MongoDB (MongoDB Atlas), use: `mongodb+srv://<username>:<password>@cluster.mongodb.net/member-management`
 
 ## 🚀 Running the Application
 
-### Start Backend Server
+### 1. Start MongoDB
+
+Make sure MongoDB is running on your system:
+
+```bash
+# For Linux/macOS
+sudo systemctl start mongod
+# or
+mongod
+
+# For Windows
+net start MongoDB
+```
+
+### 2. Seed the Database (First Time Only)
+
+```bash
+cd backend
+npm run seed
+```
+
+This will create:
+- 3 demo users (admin, manager, user)
+- 5 sample members
+
+### 3. Start Backend Server
 
 ```bash
 cd backend
@@ -91,15 +126,22 @@ The frontend will start on `http://localhost:3000`
 
 ## 🔐 Demo Credentials
 
-The system comes with pre-configured demo users:
+After running the seed script, the following test accounts are available:
 
-**Admin Account:**
+**Admin Account (Full Access):**
 - Email: `admin@slstl.lk`
 - Password: `admin123`
+- Permissions: Can view, create, update, and delete members
 
-**Member Account:**
-- Email: `member@slstl.lk`
-- Password: `admin123`
+**Manager Account (Moderate Access):**
+- Email: `manager@slstl.lk`
+- Password: `manager123`
+- Permissions: Can view, create, and update members
+
+**User Account (View Only):**
+- Email: `user@slstl.lk`
+- Password: `user123`
+- Permissions: Can only view members
 
 ## 📱 Application Flow
 
@@ -130,15 +172,25 @@ The application uses a professional color scheme inspired by modern forums:
 member-management-system/
 ├── backend/
 │   ├── src/
+│   │   ├── config/
+│   │   │   └── database.js
 │   │   ├── controllers/
-│   │   │   └── authController.js
+│   │   │   ├── authController.js
+│   │   │   └── memberController.js
 │   │   ├── middleware/
-│   │   │   └── auth.js
+│   │   │   ├── auth.js
+│   │   │   └── authorize.js
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   └── Member.js
 │   │   ├── routes/
 │   │   │   ├── auth.js
 │   │   │   └── members.js
+│   │   ├── seeders/
+│   │   │   └── seedDatabase.js
 │   │   └── server.js
 │   ├── .env
+│   ├── .env.example
 │   └── package.json
 ├── frontend/
 │   ├── src/
@@ -171,25 +223,49 @@ member-management-system/
 
 ## 🚧 Future Enhancements
 
-- [ ] Database integration (MongoDB/PostgreSQL)
-- [ ] Member CRUD operations (Create, Update, Delete)
+- [x] Database integration (MongoDB)
+- [x] Member CRUD operations (Create, Update, Delete)
+- [x] Role-based access control
 - [ ] Advanced search and filtering
 - [ ] Email verification
 - [ ] Password reset functionality
 - [ ] User profile management
 - [ ] Activity logging
 - [ ] Export members to CSV/Excel
+- [ ] Pagination for large datasets
+- [ ] File upload for member photos
 
 ## 📝 API Endpoints
 
 ### Authentication
 - `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
+- `POST /api/auth/register` - User registration (creates user with 'user' role by default)
 - `GET /api/auth/profile` - Get user profile (protected)
 
 ### Members
-- `GET /api/members` - Get all members (protected)
-- `GET /api/members/:id` - Get member by ID (protected)
+- `GET /api/members` - Get all members (requires authentication)
+- `GET /api/members/:id` - Get member by ID (requires authentication)
+- `POST /api/members` - Create new member (requires admin or manager role)
+- `PUT /api/members/:id` - Update member (requires admin or manager role)
+- `DELETE /api/members/:id` - Delete member (requires admin role only)
+
+## 👤 User Roles & Permissions
+
+### Admin
+- Full access to all features
+- Can create, read, update, and delete members
+- Can manage all users
+
+### Manager
+- Can view all members
+- Can create new members
+- Can update existing members
+- Cannot delete members
+
+### User
+- Can only view members
+- Cannot create, update, or delete members
+- Read-only access
 
 ## 🤝 Contributing
 
